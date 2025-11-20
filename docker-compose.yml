@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: bookdb-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: bookdb
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - book-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: book-crud-app
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: bookdb
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - book-network
+    restart: unless-stopped
+
+networks:
+  book-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
