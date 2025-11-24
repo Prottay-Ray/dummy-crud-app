@@ -18,9 +18,26 @@ echo "Stopping existing container (if any)..."
 docker stop "$CONTAINER_NAME" || true
 docker rm "$CONTAINER_NAME" || true
 
+echo "Starting MySQL container (if not running)..."
+docker run -d \
+  --name mysql-db \
+  -e MYSQL_ROOT_PASSWORD=rootpassword \
+  -e MYSQL_DATABASE=bookdb \
+  -p 3306:3306 \
+  mysql:8.0 || echo "MySQL already running"
+
+echo "Waiting for MySQL to be ready..."
+sleep 10
+
 echo "Starting new container..."
 docker run -d \
   --name "$CONTAINER_NAME" \
+  --link mysql-db:mysql \
+  -e DB_HOST=mysql-db \
+  -e DB_PORT=3306 \
+  -e DB_NAME=bookdb \
+  -e DB_USER=root \
+  -e DB_PASSWORD=rootpassword \
   -p 80:8080 \
   "$IMAGE"
 
