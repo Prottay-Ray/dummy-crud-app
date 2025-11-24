@@ -1,0 +1,82 @@
+name: CI-CD to EC2 via ECR (OIDC, no access keys)
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  id-token: write      # for OIDC
+  contents: read       # to checkout repo
+
+env:
+  AWS_REGION: "us-east-1"          # e.g. ap-south-1
+  ECR_REPOSITORY: "dummy-crud-app"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'           # or 17, match your app
+
+      - name: Run tests
+        run: |
+          chmod +x gradlew
+          ./gradlew clean test
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::557215975243:role/github-oidc-ecr-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY
+          IMAGE_TAG=${GITHUB_SHA}
+
+          echo "Building image $IMAGE_URI:$IMAGE_TAG"
+          docker build -t $IMAGE_URI:$IMAGE_TAG .
+
+          echo "Tagging as latest"
+          docker tag $IMAGE_URI:$IMAGE_TAG $IMAGE_URI:latest
+
+          echo "Pushing both tags"
+          docker push $IMAGE_URI:$IMAGE_TAG
+          docker push $IMAGE_URI:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (for deploy.sh)
+        uses: actions/checkout@v5
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          printf "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+      - name: Copy deploy.sh to EC2
+        run: |
+          scp ops/deploy.sh ubuntu@${{ secrets.EC2_HOST }}:~/deploy.sh
+
+      - name: Run deploy.sh on EC2
+        run: |
+          ssh ubuntu@${{ secrets.EC2_HOST }} "chmod +x ~/deploy.sh && ~/deploy.sh"
