@@ -15,6 +15,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -24,7 +25,11 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '17'           # or 17, match your app
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
 
       - name: Build with Gradle
         run: ./gradlew build --info
@@ -59,9 +64,13 @@ jobs:
           docker push $IMAGE_URI:$IMAGE_TAG
           docker push $IMAGE_URI:latest
 
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        id: build-image
+
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout (for deploy.sh)
@@ -76,8 +85,13 @@ jobs:
 
       - name: Copy deploy.sh to EC2
         run: |
-          scp ops/deploy.sh ubuntu@${{ secrets.EC2_HOST }}:~/deploy.sh
+          scp -o ConnectTimeout=30 ops/deploy.sh ubuntu@${{ secrets.EC2_HOST }}:~/deploy.sh
 
       - name: Run deploy.sh on EC2
         run: |
-          ssh ubuntu@${{ secrets.EC2_HOST }} "chmod +x ~/deploy.sh && ~/deploy.sh"
+          ssh -o ConnectTimeout=30 ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+            chmod +x ~/deploy.sh
+            ~/deploy.sh
+            echo "Checking container status..."
+            docker ps | grep dummy-crud-app || echo "Warning: Container not running"
+          EOF
