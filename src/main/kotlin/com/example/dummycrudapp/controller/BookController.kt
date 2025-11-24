@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/books")
 class BookController(private val bookService: BookService) {
 
-    private val logger = LoggerFactory.getLogger(BookController::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(BookController::class.java)
+    }
 
     @GetMapping
     fun getAllBooks(): ResponseEntity<List<Book>> {

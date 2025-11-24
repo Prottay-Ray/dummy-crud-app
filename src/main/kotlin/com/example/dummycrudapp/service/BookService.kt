@@ -14,7 +14,9 @@ class BookService(
     private val bookValidator: BookValidator
 ) {
 
-    private val logger = LoggerFactory.getLogger(BookService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(BookService::class.java)
+    }
 
     fun getAllBooks(): List<Book> {
         logger.debug("Fetching all books from database")

@@ -9,7 +9,9 @@ import java.time.Year
 @Component
 class BookValidator {
 
-    private val logger = LoggerFactory.getLogger(BookValidator::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(BookValidator::class.java)
+    }
 
     fun validateId(id: Long) {
         if (id <= 0) {
