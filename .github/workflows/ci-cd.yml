@@ -16,6 +16,9 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      image-tag: ${{ steps.build-image.outputs.IMAGE_TAG }}
+      image-tag-short: ${{ steps.build-image.outputs.IMAGE_TAG_SHORT }}
 
     steps:
       - name: Checkout
@@ -82,12 +85,11 @@ jobs:
           echo "Building image $IMAGE_URI:$IMAGE_TAG"
           docker buildx build \
             --platform linux/amd64 \
-            --cache-from type=registry,ref=$IMAGE_URI:latest \
+            --cache-from type=registry,ref=$IMAGE_URI:$IMAGE_TAG_SHORT || true \
             --cache-to type=inline \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
             -t $IMAGE_URI:$IMAGE_TAG \
             -t $IMAGE_URI:$IMAGE_TAG_SHORT \
-            -t $IMAGE_URI:latest \
             --push \
             .
 
@@ -116,9 +118,12 @@ jobs:
           scp -o ConnectTimeout=30 ops/deploy.sh ubuntu@${{ secrets.EC2_HOST }}:~/deploy.sh
 
       - name: Run deploy.sh on EC2
+        env:
+          IMAGE_TAG_SHORT: ${{ needs.build-and-push.outputs.image-tag-short }}
         run: |
-          ssh -o ConnectTimeout=30 ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o ConnectTimeout=30 ubuntu@${{ secrets.EC2_HOST }} << EOF
             chmod +x ~/deploy.sh
+            export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag-short }}
             ~/deploy.sh
             echo "Checking container status..."
             docker ps | grep dummy-crud-app || echo "Warning: Container not running"
