@@ -2,7 +2,7 @@
 set -e
 
 AWS_REGION="us-east-1"
-ACCOUNT_ID="557215975243"
+ACCOUNT_ID="708735187026"
 REPOSITORY_NAME="dummy-crud-app"
 CONTAINER_NAME="dummy-crud-app"
 
