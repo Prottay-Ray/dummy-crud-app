@@ -191,6 +191,6 @@ jobs:
           echo "**Environment:** Production (EC2)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Quick Links:**" >> $GITHUB_STEP_SUMMARY
-          echo "- [Application](http://${{ env.EC2_PUBLIC_IP }}/)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Health Check](http://${{ env.EC2_PUBLIC_IP }}/actuator/health)" >> $GITHUB_STEP_SUMMARY
-          echo "- [API](http://${{ env.EC2_PUBLIC_IP }}/api/books)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Application](http://${{ secrets.EC2_HOST }}/)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Health Check](http://${{ secrets.EC2_HOST }}/actuator/health)" >> $GITHUB_STEP_SUMMARY
+          echo "- [API](http://${{ secrets.EC2_HOST }}/api/books)" >> $GITHUB_STEP_SUMMARY

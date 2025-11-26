@@ -32,15 +32,11 @@ COPY --from=build /app/build/libs/*.jar app.jar
 # Expose port
 EXPOSE 8080
 
-# Set environment variables with defaults
-ENV DB_HOST=mysql
-ENV DB_PORT=3306
-ENV DB_NAME=bookdb
-ENV DB_USER=root
-ENV DB_PASSWORD=rootpassword
+# Create data directory for H2 database
+RUN mkdir -p /app/data && chown spring:spring /app/data
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
 # Run the application
