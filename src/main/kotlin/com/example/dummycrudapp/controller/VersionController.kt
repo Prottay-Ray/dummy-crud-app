@@ -14,7 +14,7 @@ class VersionController {
     fun getVersion(): Map<String, String> {
         return mapOf(
             "version" to appVersion,
-            "application" to "Book CRUD API"
+            "application" to "Book CRUD API",
         )
     }
 }
