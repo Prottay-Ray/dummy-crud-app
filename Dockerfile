@@ -3,6 +3,8 @@
 # Stage 1: Build stage
 FROM gradle:8.5-jdk17 AS build
 
+ARG IMAGE_TAG=dev
+
 WORKDIR /app
 
 # Copy gradle files
@@ -19,6 +21,9 @@ RUN gradle bootJar --no-daemon
 
 # Stage 2: Runtime stage
 FROM eclipse-temurin:17-jre-alpine
+
+ARG IMAGE_TAG=dev
+ENV APP_VERSION=${IMAGE_TAG}
 
 WORKDIR /app
 

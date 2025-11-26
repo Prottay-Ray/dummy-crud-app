@@ -115,6 +115,7 @@ jobs:
           docker buildx build --platform linux/amd64 \
             --cache-to type=inline \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
+            --build-arg IMAGE_TAG=$IMAGE_TAG_SHORT \
             -t $IMAGE_URI:$IMAGE_TAG \
             -t $IMAGE_URI:$IMAGE_TAG_SHORT \
             --push \
@@ -193,6 +194,6 @@ jobs:
           echo "**Environment:** Production (EC2)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Quick Links:**" >> $GITHUB_STEP_SUMMARY
-          echo "- [Application](http://${EC2_IP}/)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Health Check](http://${EC2_IP}/actuator/health)" >> $GITHUB_STEP_SUMMARY
-          echo "- [API](http://${EC2_IP}/api/books)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Application](http://${{ secrets.EC2_HOST }}/)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Health Check](http://${{ secrets.EC2_HOST }}/actuator/health)" >> $GITHUB_STEP_SUMMARY
+          echo "- [API](http://${{ secrets.EC2_HOST }}/api/books)" >> $GITHUB_STEP_SUMMARY
