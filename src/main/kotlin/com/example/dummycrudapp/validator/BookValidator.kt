@@ -22,21 +22,21 @@ class BookValidator {
 
     fun validateBook(book: Book) {
         logger.debug("Validating book: {}", book.title)
-        
+
         if (book.title.isBlank()) {
             throw ValidationException("Book title cannot be blank")
         }
-        
+
         if (book.author.isBlank()) {
             throw ValidationException("Book author cannot be blank")
         }
-        
+
         if (book.isbn.isBlank()) {
             throw ValidationException("Book ISBN cannot be blank")
         }
-        
+
         validatePublishedYear(book.publishedYear)
-        
+
         logger.debug("Book validation passed")
     }
 
