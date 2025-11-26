@@ -22,18 +22,19 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# Create a non-root user
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
+# Create a non-root user and data directory
+RUN addgroup -S spring && adduser -S spring -G spring && \
+    mkdir -p /app/data && \
+    chown -R spring:spring /app
 
 # Copy the jar from build stage
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build --chown=spring:spring /app/build/libs/*.jar app.jar
+
+# Switch to non-root user
+USER spring:spring
 
 # Expose port
 EXPOSE 8080
-
-# Create data directory for H2 database
-RUN mkdir -p /app/data && chown spring:spring /app/data
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
