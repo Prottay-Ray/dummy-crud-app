@@ -102,6 +102,12 @@ class BookService(
         return books
     }
 
+    fun getRecentBooks(limit: Int): List<Book> {
+        logger.debug("Fetching recent books with limit: {}", limit)
+        val books = bookRepository.findAll()
+        return books.sortedByDescending { it.createdAt ?: LocalDateTime.MIN }.take(limit)
+    }
+
     fun findByIsbn(isbn: String): Book {
         logger.debug("Finding book by ISBN: {}", isbn)
         bookValidator.validateSearchParameter("ISBN", isbn)
